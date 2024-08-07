@@ -4,6 +4,7 @@
  */
 package org.panteleyev.commons.xml;
 
+import javax.xml.namespace.QName;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -117,15 +118,33 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
     }
 
     /**
+     * Writes XML document with root element.
+     *
+     * @param name root element name
+     * @param body block that generates document XML
+     */
+    public void document(QName name, Runnable body) {
+        try {
+            writer.writeStartDocument();
+            writer.writeStartElement(name.getLocalPart());
+            body.run();
+            writer.writeEndElement();
+            writer.writeEndDocument();
+        } catch (XMLStreamException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      * Writes XML element.
      *
-     * @param localName element local name
-     * @param body      block that generates element XML: attributes, nodes, etc.
+     * @param name element name
+     * @param body block that generates element XML: attributes, nodes, etc.
      * @return this instance
      */
-    public XMLStreamWriterWrapper element(String localName, Runnable body) {
+    public XMLStreamWriterWrapper element(QName name, Runnable body) {
         try {
-            writer.writeStartElement(localName);
+            writer.writeStartElement(name.getLocalPart());
             body.run();
             writer.writeEndElement();
             return this;
@@ -141,13 +160,13 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * <localName>text</localName>
      * }
      *
-     * @param localName element local name
-     * @param text      element text
+     * @param name element name
+     * @param text element text
      * @return this instance
      */
-    public XMLStreamWriterWrapper element(String localName, String text) {
+    public XMLStreamWriterWrapper element(QName name, String text) {
         try {
-            writer.writeStartElement(localName);
+            writer.writeStartElement(name.getLocalPart());
             writer.writeCharacters(text);
             writer.writeEndElement();
             return this;
@@ -159,25 +178,25 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
     /**
      * Writes element with attributes.
      *
-     * @param localName  element local name
+     * @param name       element name
      * @param attributes attributes
      * @return this instance
      */
-    public XMLStreamWriterWrapper element(String localName, Map<String, ?> attributes) {
-        return element(localName, attributes, null);
+    public XMLStreamWriterWrapper element(QName name, Map<QName, ?> attributes) {
+        return element(name, attributes, null);
     }
 
     /**
      * Writes element with attributes and text.
      *
-     * @param localName  element local name
+     * @param name       element local name
      * @param attributes attributes
      * @param text       element text
      * @return this instance
      */
-    public XMLStreamWriterWrapper element(String localName, Map<String, ?> attributes, String text) {
+    public XMLStreamWriterWrapper element(QName name, Map<QName, ?> attributes, String text) {
         try {
-            writer.writeStartElement(localName);
+            writer.writeStartElement(name.getLocalPart());
             this.attributes(attributes);
             if (text != null) {
                 writer.writeCharacters(text);
@@ -196,10 +215,10 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * @param value attribute value
      * @return this instance
      */
-    public XMLStreamWriterWrapper attribute(String name, Object value) {
+    public XMLStreamWriterWrapper attribute(QName name, Object value) {
         try {
             if (value != null) {
-                writer.writeAttribute(name, valueToString(value));
+                writer.writeAttribute(name.getLocalPart(), valueToString(value));
             }
             return this;
         } catch (XMLStreamException ex) {
@@ -213,11 +232,11 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * @param attributes attributes
      * @return this instance
      */
-    public XMLStreamWriterWrapper attributes(Map<String, ?> attributes) {
+    public XMLStreamWriterWrapper attributes(Map<QName, ?> attributes) {
         try {
             for (var entry : attributes.entrySet()) {
                 if (entry.getValue() != null) {
-                    writer.writeAttribute(entry.getKey(), valueToString(entry.getValue()));
+                    writer.writeAttribute(entry.getKey().getLocalPart(), valueToString(entry.getValue()));
                 }
             }
             return this;
