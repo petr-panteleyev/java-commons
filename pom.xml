@@ -11,7 +11,7 @@
 
     <groupId>org.panteleyev</groupId>
     <artifactId>commons</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
@@ -43,14 +43,14 @@
         <!-- Plugins -->
         <mavenToolchainsPluginVersion>3.2.0</mavenToolchainsPluginVersion>
         <mavenCompilerPluginVersion>3.13.0</mavenCompilerPluginVersion>
-        <mavenJarPluginVersion>3.4.1</mavenJarPluginVersion>
-        <mavenSurefirePluginVersion>3.2.5</mavenSurefirePluginVersion>
-        <mavenJavadocPluginVersion>3.7.0</mavenJavadocPluginVersion>
+        <mavenJarPluginVersion>3.4.2</mavenJarPluginVersion>
+        <mavenSurefirePluginVersion>3.3.1</mavenSurefirePluginVersion>
+        <mavenJavadocPluginVersion>3.8.0</mavenJavadocPluginVersion>
         <mavenSourcePluginVersion>3.3.1</mavenSourcePluginVersion>
         <mavenGpgPluginVersion>3.2.4</mavenGpgPluginVersion>
         <nexusStagingMavenPlugin>1.7.0</nexusStagingMavenPlugin>
         <!-- Dependencies -->
-        <jUnitVersion>5.10.2</jUnitVersion>
+        <jUnitVersion>5.10.3</jUnitVersion>
     </properties>
 
     <dependencies>
