@@ -12,10 +12,16 @@ import java.util.function.Consumer;
 
 /**
  * Implements convenience wrapper for {@link XMLEvent} instances.
- *
- * @param event wrapped instance
  */
-public record XMLEventWrapper(XMLEvent event) {
+public class XMLEventWrapper {
+    private final XMLEvent event;
+    private final XMLEventReaderWrapper wrapper;
+
+    XMLEventWrapper(XMLEvent event, XMLEventReaderWrapper wrapper) {
+        this.event = event;
+        this.wrapper = wrapper;
+    }
+
     /**
      * Calls handler if event is {@link javax.xml.stream.events.StartElement}.
      *
@@ -29,7 +35,7 @@ public record XMLEventWrapper(XMLEvent event) {
 
         var startElement = event.asStartElement();
         if (startElement.getName().equals(name)) {
-            handler.accept(new StartElementWrapper(startElement));
+            handler.accept(new StartElementWrapper(startElement, wrapper));
         }
     }
 
@@ -37,7 +43,7 @@ public record XMLEventWrapper(XMLEvent event) {
      * Returns {@link StartElementWrapper} if {@link StartElement#isStartElement()} is true and name matches.
      *
      * @param name element name
-     * @return start element wrapper or empty if conditions are not met
+     * @return start element wrapper
      */
     public Optional<StartElementWrapper> asStartElement(QName name) {
         if (!event.isStartElement()) {
@@ -45,7 +51,18 @@ public record XMLEventWrapper(XMLEvent event) {
         }
 
         var startElement = event.asStartElement();
-        return startElement.getName().equals(name) ? Optional.of(new StartElementWrapper(startElement)) : Optional.empty();
+        return startElement.getName().equals(name) ?
+                Optional.of(new StartElementWrapper(startElement, wrapper)) : Optional.empty();
+    }
+
+    /**
+     * Returns {@link StartElementWrapper} if {@link StartElement#isStartElement()} is true.
+     *
+     * @return start element wrapper
+     */
+    public Optional<StartElementWrapper> asStartElement() {
+        return event.isStartElement() ?
+                Optional.of(new StartElementWrapper(event.asStartElement(), wrapper)) : Optional.empty();
     }
 
     /**

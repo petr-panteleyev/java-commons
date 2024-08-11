@@ -14,8 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
 
-import static org.panteleyev.commons.xml.Formatters.DATE_FORMATTER;
-import static org.panteleyev.commons.xml.Formatters.DATE_TIME_FORMATTER;
+import static org.panteleyev.commons.xml.Converter.valueToString;
 
 /**
  * Implements convenience wrapper for {@link XMLStreamWriter} instances.
@@ -25,23 +24,13 @@ import static org.panteleyev.commons.xml.Formatters.DATE_TIME_FORMATTER;
  *     <tr><td>{@link String}</td><td>as is</td></tr>
  *     <tr><td>{@link LocalDateTime}</td><td>ISO date time</td></tr>
  *     <tr><td>{@link Enum}</td><td>{@link Enum#name()}</td></tr>
- *     <tr><td>{@link LocalDate}</td><td>{@link LocalDate#toEpochDay()} or ISO date depending on {@link Option options}.</td></tr>
+ *     <tr><td>{@link LocalDate}</td><td>{@link LocalDate#toEpochDay()} or ISO date depending on {@link SerializationOption options}.</td></tr>
  *     <tr><td>{@link Object}</td><td>{@link Object#toString()}</td></tr>
  * </table>
  */
 @SuppressWarnings("UnusedReturnValue")
 public class XMLStreamWriterWrapper implements AutoCloseable {
-    /**
-     * Serialization options.
-     */
-    public enum Option {
-        /**
-         * Exports {@link LocalDate} as {@link LocalDate#toEpochDay() epoch day}, otherwise as ISO_DATE.
-         */
-        LOCAL_DATE_AS_EPOCH_DAY
-    }
-
-    private static final XMLOutputFactory XML_OUTPUT_FACTORY = XMLOutputFactory.newInstance();
+    private static final XMLOutputFactory OUTPUT_FACTORY = XMLOutputFactory.newInstance();
 
     private final XMLStreamWriter writer;
     private final boolean localDateAsEpochDay;
@@ -63,11 +52,11 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * @param options set of options
      * @return instance of {@link XMLStreamWriterWrapper}
      */
-    public static XMLStreamWriterWrapper newInstance(OutputStream out, Set<Option> options) {
+    public static XMLStreamWriterWrapper newInstance(OutputStream out, Set<SerializationOption> options) {
         try {
             return new XMLStreamWriterWrapper(
-                    XML_OUTPUT_FACTORY.createXMLStreamWriter(out),
-                    options.contains(Option.LOCAL_DATE_AS_EPOCH_DAY)
+                    OUTPUT_FACTORY.createXMLStreamWriter(out),
+                    options.contains(SerializationOption.LOCAL_DATE_AS_EPOCH_DAY)
             );
         } catch (XMLStreamException ex) {
             throw new RuntimeException(ex);
@@ -160,14 +149,14 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * <localName>text</localName>
      * }
      *
-     * @param name element name
-     * @param text element text
+     * @param name  element name
+     * @param value value converted to element text
      * @return this instance
      */
-    public XMLStreamWriterWrapper element(QName name, String text) {
+    public XMLStreamWriterWrapper textElement(QName name, Object value) {
         try {
             writer.writeStartElement(name.getLocalPart());
-            writer.writeCharacters(text);
+            writer.writeCharacters(valueToString(value, localDateAsEpochDay));
             writer.writeEndElement();
             return this;
         } catch (XMLStreamException ex) {
@@ -183,7 +172,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * @return this instance
      */
     public XMLStreamWriterWrapper element(QName name, Map<QName, ?> attributes) {
-        return element(name, attributes, null);
+        return textElement(name, attributes, null);
     }
 
     /**
@@ -191,15 +180,15 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      *
      * @param name       element local name
      * @param attributes attributes
-     * @param text       element text
+     * @param value      value converted to element text
      * @return this instance
      */
-    public XMLStreamWriterWrapper element(QName name, Map<QName, ?> attributes, String text) {
+    public XMLStreamWriterWrapper textElement(QName name, Map<QName, ?> attributes, Object value) {
         try {
             writer.writeStartElement(name.getLocalPart());
             this.attributes(attributes);
-            if (text != null) {
-                writer.writeCharacters(text);
+            if (value != null) {
+                writer.writeCharacters(valueToString(value, localDateAsEpochDay));
             }
             writer.writeEndElement();
             return this;
@@ -218,7 +207,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
     public XMLStreamWriterWrapper attribute(QName name, Object value) {
         try {
             if (value != null) {
-                writer.writeAttribute(name.getLocalPart(), valueToString(value));
+                writer.writeAttribute(name.getLocalPart(), valueToString(value, localDateAsEpochDay));
             }
             return this;
         } catch (XMLStreamException ex) {
@@ -236,7 +225,8 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
         try {
             for (var entry : attributes.entrySet()) {
                 if (entry.getValue() != null) {
-                    writer.writeAttribute(entry.getKey().getLocalPart(), valueToString(entry.getValue()));
+                    writer.writeAttribute(entry.getKey().getLocalPart(),
+                            valueToString(entry.getValue(), localDateAsEpochDay));
                 }
             }
             return this;
@@ -258,16 +248,5 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
         } catch (XMLStreamException ex) {
             throw new RuntimeException(ex);
         }
-    }
-
-    private String valueToString(Object value) {
-        return switch (value) {
-            case String stringValue -> stringValue;
-            case LocalDateTime localDateTime -> localDateTime.format(DATE_TIME_FORMATTER);
-            case Enum<?> enumValue -> enumValue.name();
-            case LocalDate localDate when localDateAsEpochDay -> Long.toString(localDate.toEpochDay());
-            case LocalDate localDate -> localDate.format(DATE_FORMATTER);
-            default -> value.toString();
-        };
     }
 }

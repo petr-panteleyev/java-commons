@@ -28,7 +28,7 @@ public class XMLStreamWriterWrapperTest {
     @Test
     public void testDocument() throws Exception {
         try (var out = new ByteArrayOutputStream(); var writer = XMLStreamWriterWrapper.newInstance(out)) {
-            writer.document(() -> writer.element(new QName("element"), "text"));
+            writer.document(() -> writer.textElement(new QName("element"), "text"));
             var xml = out.toString(StandardCharsets.UTF_8);
             assertEquals("""
                     <?xml version="1.0" ?><element>text</element>""", xml);
@@ -38,7 +38,8 @@ public class XMLStreamWriterWrapperTest {
     @Test
     public void testDocumentWithRootElement() throws Exception {
         try (var out = new ByteArrayOutputStream(); var writer = XMLStreamWriterWrapper.newInstance(out)) {
-            writer.document(new QName("rootElement"), () -> writer.element(new QName("element"), "text"));
+            writer.document(new QName("rootElement"),
+                    () -> writer.textElement(new QName("element"), "text"));
             var xml = out.toString(StandardCharsets.UTF_8);
             assertEquals("""
                     <?xml version="1.0" ?><rootElement><element>text</element></rootElement>""", xml);
@@ -48,7 +49,8 @@ public class XMLStreamWriterWrapperTest {
     @Test
     public void testElementWithBody() throws Exception {
         try (var out = new ByteArrayOutputStream(); var writer = XMLStreamWriterWrapper.newInstance(out)) {
-            writer.element(new QName("element"), () -> writer.element(new QName("subElement"), "text"));
+            writer.element(new QName("element"),
+                    () -> writer.textElement(new QName("subElement"), "text"));
             var xml = out.toString(StandardCharsets.UTF_8);
             assertEquals("""
                     <element><subElement>text</subElement></element>""", xml);
@@ -92,9 +94,9 @@ public class XMLStreamWriterWrapperTest {
     }
 
     @Test
-    public void testElementWithTextNoAttributes() throws Exception {
+    public void testTextElementNoAttributes() throws Exception {
         try (var out = new ByteArrayOutputStream(); var writer = XMLStreamWriterWrapper.newInstance(out)) {
-            writer.element(new QName("element"), "text");
+            writer.textElement(new QName("element"), "text");
             var xml = out.toString(StandardCharsets.UTF_8);
             assertEquals("""
                     <element>text</element>""", xml);
@@ -116,7 +118,7 @@ public class XMLStreamWriterWrapperTest {
     @Test
     public void testElementWithAttributesAndText() throws Exception {
         try (var out = new ByteArrayOutputStream(); var writer = XMLStreamWriterWrapper.newInstance(out)) {
-            writer.element(new QName("element"), Map.of(
+            writer.textElement(new QName("element"), Map.of(
                     new QName("attr"), 100
             ), "text");
             var xml = out.toString(StandardCharsets.UTF_8);

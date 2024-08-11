@@ -5,36 +5,73 @@
 package org.panteleyev.commons.xml;
 
 import javax.xml.namespace.QName;
+import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
-import java.util.UUID;
+import java.util.Optional;
+
+import static org.panteleyev.commons.xml.Converter.stringToValue;
 
 /**
  * Implements convenience wrapper for {@link StartElement} instances.
- *
- * @param startElement wrapped instance
  */
-public record StartElementWrapper(StartElement startElement) {
+public class StartElementWrapper {
+    private final StartElement startElement;
+    private final XMLEventReaderWrapper wrapper;
+
+    StartElementWrapper(StartElement startElement, XMLEventReaderWrapper wrapper) {
+        this.startElement = startElement;
+        this.wrapper = wrapper;
+    }
+
     /**
-     * Returns attribute value.
+     * Returns name of the wrapped element.
+     *
+     * @return name
+     */
+    public QName getName() {
+        return startElement.getName();
+    }
+
+    /**
+     * Returns attribute value as string. This is the fastest way of getting attribute value as there is no attempt to
+     * parse the raw value from {@link Attribute#getValue()}.
      *
      * @param name attribute name
      * @return attribute value or null if attribute does not exist
      */
-    public String getAttributeValue(QName name) {
+    public Optional<String> getAttributeValue(QName name) {
         var attribute = startElement.getAttributeByName(name);
-        return attribute == null ? null : attribute.getValue();
+        return attribute == null ? Optional.empty() : Optional.of(attribute.getValue());
     }
 
     /**
-     * Returns attribute value.
+     * Returns attribute value of specified class.
+     *
+     * @param name attribute name
+     * @param type value class
+     * @param <T>  value type
+     * @return value as instance of class
+     */
+    public <T> Optional<T> getAttributeValue(QName name, Class<T> type) {
+        var attribute = startElement.getAttributeByName(name);
+        return attribute == null ?
+                Optional.empty() :
+                Optional.of(stringToValue(type, attribute.getValue(), wrapper.isLocalDateAsEpochDay()));
+    }
+
+    /**
+     * Returns attribute value of specified class or default value.
      *
      * @param name         attribute name
      * @param defaultValue attribute default value
      * @return attribute value or default value if attribute does not exist
      */
-    public String getAttributeValue(QName name, String defaultValue) {
+    @SuppressWarnings("unchecked")
+    public <T> T getAttributeValue(QName name, T defaultValue) {
         var attribute = startElement.getAttributeByName(name);
-        return attribute == null ? defaultValue : attribute.getValue();
+        return attribute == null ?
+                defaultValue :
+                (T) stringToValue(defaultValue.getClass(), attribute.getValue(), wrapper.isLocalDateAsEpochDay());
     }
 
     /**
@@ -47,6 +84,18 @@ public record StartElementWrapper(StartElement startElement) {
     public int getAttributeValue(QName name, int defaultValue) {
         var attribute = startElement.getAttributeByName(name);
         return attribute == null ? defaultValue : Integer.parseInt(attribute.getValue());
+    }
+
+    /**
+     * Returns attribute value as long.
+     *
+     * @param name         attribute name
+     * @param defaultValue attribute default value
+     * @return attribute value or default value if attribute does not exist
+     */
+    public long getAttributeValue(QName name, long defaultValue) {
+        var attribute = startElement.getAttributeByName(name);
+        return attribute == null ? defaultValue : Long.parseLong(attribute.getValue());
     }
 
     /**
@@ -71,17 +120,5 @@ public record StartElementWrapper(StartElement startElement) {
     public boolean getAttributeValue(QName name, boolean defaultValue) {
         var attribute = startElement.getAttributeByName(name);
         return attribute == null ? defaultValue : Boolean.parseBoolean(attribute.getValue());
-    }
-
-    /**
-     * Returns attribute value as {@link UUID}.
-     *
-     * @param name         attribute name
-     * @param defaultValue attribute default value
-     * @return attribute value or default value if attribute does not exist
-     */
-    public UUID getAttributeValue(QName name, UUID defaultValue) {
-        var attribute = startElement.getAttributeByName(name);
-        return attribute == null ? defaultValue : UUID.fromString(attribute.getValue());
     }
 }
