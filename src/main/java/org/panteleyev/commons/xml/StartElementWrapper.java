@@ -12,7 +12,7 @@ import java.util.Optional;
 import static org.panteleyev.commons.xml.Converter.stringToValue;
 
 /**
- * Implements convenience wrapper for {@link StartElement} instances.
+ * Convenience wrapper for {@link StartElement} instances.
  */
 public class StartElementWrapper {
     private final StartElement startElement;
@@ -56,7 +56,7 @@ public class StartElementWrapper {
         var attribute = startElement.getAttributeByName(name);
         return attribute == null ?
                 Optional.empty() :
-                Optional.of(stringToValue(type, attribute.getValue(), wrapper.isLocalDateAsEpochDay()));
+                stringToValue(type, attribute.getValue(), wrapper.isLocalDateAsEpochDay());
     }
 
     /**
@@ -71,7 +71,9 @@ public class StartElementWrapper {
         var attribute = startElement.getAttributeByName(name);
         return attribute == null ?
                 defaultValue :
-                (T) stringToValue(defaultValue.getClass(), attribute.getValue(), wrapper.isLocalDateAsEpochDay());
+                stringToValue(defaultValue.getClass(), attribute.getValue(), wrapper.isLocalDateAsEpochDay())
+                        .map(v -> (T) v)
+                        .orElse(defaultValue);
     }
 
     /**
@@ -83,7 +85,11 @@ public class StartElementWrapper {
      */
     public int getAttributeValue(QName name, int defaultValue) {
         var attribute = startElement.getAttributeByName(name);
-        return attribute == null ? defaultValue : Integer.parseInt(attribute.getValue());
+        try {
+            return attribute == null ? defaultValue : Integer.parseInt(attribute.getValue());
+        } catch (NumberFormatException ex) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -95,7 +101,11 @@ public class StartElementWrapper {
      */
     public long getAttributeValue(QName name, long defaultValue) {
         var attribute = startElement.getAttributeByName(name);
-        return attribute == null ? defaultValue : Long.parseLong(attribute.getValue());
+        try {
+            return attribute == null ? defaultValue : Long.parseLong(attribute.getValue());
+        } catch (NumberFormatException ex) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -107,7 +117,11 @@ public class StartElementWrapper {
      */
     public double getAttributeValue(QName name, double defaultValue) {
         var attribute = startElement.getAttributeByName(name);
-        return attribute == null ? defaultValue : Double.parseDouble(attribute.getValue());
+        try {
+            return attribute == null ? defaultValue : Double.parseDouble(attribute.getValue());
+        } catch (NumberFormatException ex) {
+            return defaultValue;
+        }
     }
 
     /**

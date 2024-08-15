@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 final class Converter {
@@ -49,31 +50,41 @@ final class Converter {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    static <T> T stringToValue(Class<T> type, String stringValue, boolean localDateAsEpochDay) {
-        Objects.requireNonNull(stringValue);
+    static <T> Optional<T> stringToValue(Class<T> type, String stringValue, boolean localDateAsEpochDay) {
+        if (stringValue == null) {
+            return Optional.empty();
+        }
 
         if (type.isEnum()) {
-            return (T) Enum.valueOf((Class) type, stringValue);
+            return Optional.of((T) Enum.valueOf((Class) type, stringValue));
         } else {
-            return (T) switch (type.getTypeName()) {
-                case TYPE_STRING -> stringValue;
-                case TYPE_INT -> Integer.parseInt(stringValue);
-                case TYPE_INTEGER -> Integer.valueOf(stringValue);
-                case TYPE_LONG_P -> Long.parseLong(stringValue);
-                case TYPE_LONG -> Long.valueOf(stringValue);
-                case TYPE_BOOL -> Boolean.parseBoolean(stringValue);
-                case TYPE_BOOLEAN -> Boolean.valueOf(stringValue);
-                case TYPE_DOUBLE -> Double.valueOf(stringValue);
-                case TYPE_DOUBLE_P -> Double.parseDouble(stringValue);
-                case TYPE_BIG_DECIMAL -> new BigDecimal(stringValue);
-                case TYPE_UUID -> UUID.fromString(stringValue);
-                case TYPE_LOCAL_DATE -> localDateAsEpochDay ?
-                        LocalDate.ofEpochDay(Long.parseLong(stringValue)) :
-                        LocalDate.parse(stringValue, DATE_FORMATTER);
-                case TYPE_LOCAL_DATE_TIME -> LocalDateTime.parse(stringValue, DATE_TIME_FORMATTER);
-                case TYPE_BYTE_ARRAY -> Base64.getDecoder().decode(stringValue);
-                default -> throw new IllegalArgumentException("Unsupported type: " + type.getTypeName());
-            };
+            var typeName = type.getTypeName();
+            if (typeName.equals(TYPE_STRING)) {
+                return Optional.of((T) stringValue);
+            } else {
+                if (stringValue.isBlank()) {
+                    return Optional.empty();
+                } else {
+                    return Optional.ofNullable((T) switch (typeName) {
+                        case TYPE_INT -> Integer.parseInt(stringValue);
+                        case TYPE_INTEGER -> Integer.valueOf(stringValue);
+                        case TYPE_LONG_P -> Long.parseLong(stringValue);
+                        case TYPE_LONG -> Long.valueOf(stringValue);
+                        case TYPE_BOOL -> Boolean.parseBoolean(stringValue);
+                        case TYPE_BOOLEAN -> Boolean.valueOf(stringValue);
+                        case TYPE_DOUBLE -> Double.valueOf(stringValue);
+                        case TYPE_DOUBLE_P -> Double.parseDouble(stringValue);
+                        case TYPE_BIG_DECIMAL -> new BigDecimal(stringValue);
+                        case TYPE_UUID -> UUID.fromString(stringValue);
+                        case TYPE_LOCAL_DATE -> localDateAsEpochDay ?
+                                LocalDate.ofEpochDay(Long.parseLong(stringValue)) :
+                                LocalDate.parse(stringValue, DATE_FORMATTER);
+                        case TYPE_LOCAL_DATE_TIME -> LocalDateTime.parse(stringValue, DATE_TIME_FORMATTER);
+                        case TYPE_BYTE_ARRAY -> Base64.getDecoder().decode(stringValue);
+                        default -> throw new IllegalArgumentException("Unsupported type: " + typeName);
+                    });
+                }
+            }
         }
     }
 

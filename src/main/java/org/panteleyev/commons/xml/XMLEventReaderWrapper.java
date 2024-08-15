@@ -13,7 +13,7 @@ import java.util.Set;
 import static org.panteleyev.commons.xml.Converter.stringToValue;
 
 /**
- * Implements convenience wrapper for {@link XMLEventReader} instances.
+ * Convenience wrapper for {@link XMLEventReader} instances.
  */
 public class XMLEventReaderWrapper implements AutoCloseable {
     private static final XMLInputFactory INPUT_FACTORY = XMLInputFactory.newInstance();
@@ -166,7 +166,7 @@ public class XMLEventReaderWrapper implements AutoCloseable {
      * @return value
      */
     public <T> Optional<T> getElementValue(Class<T> type) {
-        return getElementText().map(text -> stringToValue(type, text, localDateAsEpochDay));
+        return getElementText().flatMap(text -> stringToValue(type, text, localDateAsEpochDay));
     }
 
     /**

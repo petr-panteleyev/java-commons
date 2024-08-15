@@ -17,7 +17,7 @@ import java.util.Set;
 import static org.panteleyev.commons.xml.Converter.valueToString;
 
 /**
- * Implements convenience wrapper for {@link XMLStreamWriter} instances.
+ * Convenience wrapper for {@link XMLStreamWriter} instances.
  * <p>Attribute values are converted to string accoring to the following rules:</p>
  * <table border="1" cellpadding="5" cellspacing="0">
  *     <tr><th>Class</th><th>String Value</th></tr>

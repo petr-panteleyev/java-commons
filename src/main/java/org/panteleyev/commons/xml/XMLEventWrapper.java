@@ -9,9 +9,10 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
- * Implements convenience wrapper for {@link XMLEvent} instances.
+ * Convenience wrapper for {@link XMLEvent} instances.
  */
 public class XMLEventWrapper {
     private final XMLEvent event;
@@ -36,6 +37,27 @@ public class XMLEventWrapper {
         var startElement = event.asStartElement();
         if (startElement.getName().equals(name)) {
             handler.accept(new StartElementWrapper(startElement, wrapper));
+        }
+    }
+
+    /**
+     * Calls handler if event is {@link javax.xml.stream.events.StartElement}, name matches and condition is true.
+     *
+     * @param name      element name
+     * @param condition element condition
+     * @param handler   element handler
+     */
+    public void ifStartElement(QName name, Predicate<StartElementWrapper> condition, Consumer<StartElementWrapper> handler) {
+        if (!event.isStartElement()) {
+            return;
+        }
+
+        var startElement = event.asStartElement();
+        if (startElement.getName().equals(name)) {
+            var elementWrapper = new StartElementWrapper(startElement, wrapper);
+            if (condition.test(elementWrapper)) {
+                handler.accept(new StartElementWrapper(startElement, wrapper));
+            }
         }
     }
 

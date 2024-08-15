@@ -13,10 +13,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ConverterTest {
 
@@ -53,7 +55,21 @@ public class ConverterTest {
     @MethodSource("testStringToValueArguments")
     public void testStringToValue(String text, Class<?> type, Object expected, boolean localDateAsEpochDay) {
         var actual = Converter.stringToValue(type, text, localDateAsEpochDay);
-        assertEquals(expected, actual);
+        assertEquals(expected, actual.orElseThrow());
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {
+            Integer.class, Long.class, Boolean.class, BigDecimal.class, String.class,
+            UUID.class, LocalDate.class, LocalDateTime.class
+    })
+    public void testEmptyString(Class<?> type) {
+        var actual = Converter.stringToValue(type, "", false);
+        if (Objects.equals(type, String.class)) {
+            assertEquals("", actual.orElseThrow());
+        } else {
+            assertTrue(actual.isEmpty());
+        }
     }
 
     @ParameterizedTest
@@ -72,9 +88,9 @@ public class ConverterTest {
             var restored = Converter.stringToValue(originalValue.getClass(), stringValue, localDateAsEpochDay);
 
             if (originalValue.getClass().isArray()) {
-                assertArrayEquals((byte[]) originalValue, (byte[]) restored);
+                assertArrayEquals((byte[]) originalValue, (byte[]) restored.orElseThrow());
             } else {
-                assertEquals(originalValue, restored);
+                assertEquals(originalValue, restored.orElseThrow());
             }
         }
     }
