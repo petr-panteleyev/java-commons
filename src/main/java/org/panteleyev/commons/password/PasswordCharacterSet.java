@@ -7,6 +7,7 @@ package org.panteleyev.commons.password;
 import java.util.Random;
 
 import static java.util.Arrays.binarySearch;
+import static java.util.Arrays.sort;
 
 /**
  * Defines password character sets.
@@ -49,7 +50,9 @@ public enum PasswordCharacterSet {
 
     PasswordCharacterSet(char[] characters, char[] ambiguousCharacters) {
         this.characters = characters;
+        sort(this.characters);
         this.ambiguousCharacters = ambiguousCharacters;
+        sort(this.ambiguousCharacters);
     }
 
     PasswordCharacterSet(char[] characters) {
