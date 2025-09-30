@@ -1,9 +1,11 @@
 /*
- Copyright © 2020-2024 Petr Panteleyev <petr@panteleyev.org>
+ Copyright © 2020-2025 Petr Panteleyev
  SPDX-License-Identifier: BSD-2-Clause
  */
 package org.panteleyev.commons.crypto;
 
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,7 +42,7 @@ public interface AES {
      * @param src      bytes to encrypt
      * @param password password
      * @param out      stream
-     * @throws IOException in case of error
+     * @throws IOException if an I/O error occurs.
      */
     void encrypt(byte[] src, String password, OutputStream out) throws IOException;
 
@@ -84,8 +86,24 @@ public interface AES {
      */
     byte[] decrypt(InputStream in, String password) throws IOException;
 
+    /**
+     * Returns input stream to decrypt encrypted stream with password.
+     *
+     * @param in       encrypted stream
+     * @param password password
+     * @return instance of {@link CipherInputStream}
+     * @throws IOException if an I/O error occurs.
+     */
     InputStream getInputStream(InputStream in, String password) throws IOException;
 
+    /**
+     * Returns output stream to encrypt given output stream.
+     *
+     * @param out      output stream
+     * @param password password
+     * @return instance of {@link CipherOutputStream}
+     * @throws IOException if an I/O error occurs.
+     */
     OutputStream getOutputStream(OutputStream out, String password) throws IOException;
 
     /**

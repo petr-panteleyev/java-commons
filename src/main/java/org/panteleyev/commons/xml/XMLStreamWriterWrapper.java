@@ -1,5 +1,5 @@
 /*
- Copyright © 2024 Petr Panteleyev <petr@panteleyev.org>
+ Copyright © 2024-2025 Petr Panteleyev
  SPDX-License-Identifier: BSD-2-Clause
  */
 package org.panteleyev.commons.xml;
@@ -19,7 +19,8 @@ import static org.panteleyev.commons.xml.Converter.valueToString;
 /**
  * Convenience wrapper for {@link XMLStreamWriter} instances.
  * <p>Attribute values are converted to string accoring to the following rules:</p>
- * <table border="1" cellpadding="5" cellspacing="0">
+ * <table border="1">
+ *     <caption>Attribute conversion</caption>
  *     <tr><th>Class</th><th>String Value</th></tr>
  *     <tr><td>{@link String}</td><td>as is</td></tr>
  *     <tr><td>{@link LocalDateTime}</td><td>ISO date time</td></tr>

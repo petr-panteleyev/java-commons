@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Copyright © 2024-2025 Petr Panteleyev <petr@panteleyev.org>
+  Copyright © 2024-2025 Petr Panteleyev
   SPDX-License-Identifier: BSD-2-Clause
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -11,7 +11,7 @@
 
     <groupId>org.panteleyev</groupId>
     <artifactId>commons</artifactId>
-    <version>1.6.1</version>
+    <version>1.7.0</version>
 
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
@@ -42,15 +42,15 @@
         <maven.compiler.release>21</maven.compiler.release>
         <!-- Plugins -->
         <mavenToolchainsPluginVersion>3.2.0</mavenToolchainsPluginVersion>
-        <mavenCompilerPluginVersion>3.13.0</mavenCompilerPluginVersion>
+        <mavenCompilerPluginVersion>3.14.1</mavenCompilerPluginVersion>
         <mavenJarPluginVersion>3.4.2</mavenJarPluginVersion>
-        <mavenSurefirePluginVersion>3.5.2</mavenSurefirePluginVersion>
-        <mavenJavadocPluginVersion>3.11.1</mavenJavadocPluginVersion>
+        <mavenSurefirePluginVersion>3.5.4</mavenSurefirePluginVersion>
+        <mavenJavadocPluginVersion>3.11.3</mavenJavadocPluginVersion>
         <mavenSourcePluginVersion>3.3.1</mavenSourcePluginVersion>
         <mavenGpgPluginVersion>3.2.7</mavenGpgPluginVersion>
-        <nexusStagingMavenPlugin>1.7.0</nexusStagingMavenPlugin>
+        <nexusStagingMavenPlugin>0.7.0</nexusStagingMavenPlugin>
         <!-- Dependencies -->
-        <jUnitVersion>5.11.3</jUnitVersion>
+        <jUnitVersion>5.13.1</jUnitVersion>
     </properties>
 
     <dependencies>
@@ -102,9 +102,9 @@
                     <notimestamp>true</notimestamp>
                     <author>false</author>
                     <bottom><![CDATA[Copyright &copy; 2024-2025, Petr Panteleyev]]></bottom>
-                    <additionalOptions>-html5 --release ${maven.compiler.release}</additionalOptions>
+                    <additionalOptions>--release ${maven.compiler.release}</additionalOptions>
                     <show>protected</show>
-                    <doclint>none</doclint>
+                    <disableNoFonts>true</disableNoFonts>
                 </configuration>
                 <executions>
                     <execution>
@@ -148,16 +148,23 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
                 <version>${nexusStagingMavenPlugin}</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                    <waitUntil>published</waitUntil>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+    <repositories>
+        <repository>
+            <id>maven_central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
+    </repositories>
 </project>

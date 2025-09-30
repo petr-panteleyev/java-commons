@@ -1,5 +1,5 @@
 /*
- Copyright © 2017-2024 Petr Panteleyev <petr@panteleyev.org>
+ Copyright © 2017-2025 Petr Panteleyev
  SPDX-License-Identifier: BSD-2-Clause
  */
 package org.panteleyev.commons.password;
@@ -24,6 +24,12 @@ import java.util.Set;
  */
 public final class PasswordGenerator {
     private static final Random RANDOM = new Random(System.currentTimeMillis());
+
+    /**
+     * Creates an instance of <code>PasswordGenerator</code>.
+     */
+    public PasswordGenerator() {
+    }
 
     /**
      * Generates password and avoids ambiguous letters.

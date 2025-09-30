@@ -1,5 +1,5 @@
 /*
- Copyright © 2025 Petr Panteleyev <petr@panteleyev.org>
+ Copyright © 2025 Petr Panteleyev
  SPDX-License-Identifier: BSD-2-Clause
  */
 package org.panteleyev.commons.functional;
@@ -9,26 +9,24 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * <p>A discriminated union that encapsulates either successful result with a value or failure with exception.</p>
+ * <p>A discriminated union that encapsulates either successful result with a value or failure with throwable.</p>
  *
- * <h1>Creating Result</h1>
+ * <h2>Creating Result</h2>
  *
- * <p>There are three methods to create result:
+ * <p>There are three methods to create result:</p>
  * <ul>
  *     <li>{@link #success}</li>
  *     <li>{@link #empty()} - convenience method for {@code Result<Void>}</li>
  *     <li>{@link #failure}</li>
  * </ul>
  *
- * </p>
- *
  * <p>As Java does not have non-nullable types {@code null} can be supplied and received in all methods as a valid
  * result value. If non-nullable type must be represented one can use {@code Result<Optional<T>>} although it is
  * considered a bad practice to use {@link Optional} this way.</p>
- * <p>
- * Direct instantiation of {@link Success} or {@link Failure} is also possible though not recommended.
  *
- * <p><strong>Examples:</strong>
+ * <p>Direct instantiation of {@link Success} or {@link Failure} is also possible though not recommended.</p>
+ *
+ * <p><strong>Examples:</strong></p>
  * <pre>{@code
  * Result<Integer> calculateSomething() {
  *     try {
@@ -54,56 +52,51 @@ import java.util.function.Consumer;
  *     }
  * }
  * }</pre>
- * </p>
  *
- * <h1>Handling Result</h1>
+ * <h2>Handling Result</h2>
  *
- * <h2>Chainable Methods</h2>
- * <p>
+ * <h3>Chainable Methods</h3>
  * <ul>
  *     <li>{@link #onSuccess}</li>
  *     <li>{@link #onFailure}</li>
  *     <li>{@link #getOrThrow()}</li>
  *     <li>{@link #throwIfFailure()}</li>
  * </ul>
- * </p>
  *
- * <p><strong>Examples:</strong>
+ * <p><strong>Examples:</strong></p>
  * <pre>{@code
- * // Do some actions with either value or exception:
+ * // Do some actions with either value or throwable:
  * //
  * getResult().onSuccess(value -> {
  *     // process value
- * }).onFailure(exception -> {
- *     // process exception
+ * }).onFailure(throwable -> {
+ *     // process throwable
  * });
  *
- * // Do some actions with either value or exception then get value or throw {@link RuntimeException}:
+ * // Do some actions with either value or throwable then get value or throw {@link RuntimeException}:
  * //
  * var value = getResult().onSuccess(value -> {
  *     // process value
- * }).onFailure(exception -> {
- *     // process exception
+ * }).onFailure(throwable -> {
+ *     // process throwable
  * }).getOrThrow();
  * }</pre>
- * </p>
  *
- * <h2>Pattern Matching</h2>
+ * <h3>Pattern Matching</h3>
  *
  * <p>Result is represented by either {@link Success} or {@link Failure} instances which can be used in
- * record pattern matching:
+ * record pattern matching:</p>
  * <pre>
  * {@code
  * public String buildString() {
  *      var result = doSomething();
  *      return switch (result) {
  *          case Success<String>(String value) -> value;
- *          case Failure<?>(Exception exception) -> "";
+ *          case Failure<?>(Throwable throwable) -> "";
  *      }
  * }
  * }
  * </pre>
- * </p>
  *
  * @param <T> value type
  */
@@ -128,14 +121,14 @@ public sealed interface Result<T> permits Success, Failure {
 
     /**
      * Returns value if success or throws exception if failure.
-     * If exception is not {@link RuntimeException} then {@code RuntimeException(exception)} is thrown.
+     * If throwable is not {@link RuntimeException} then {@code RuntimeException(throwable)} is thrown.
      *
      * @return value
      */
     default T getOrThrow() {
         return switch (this) {
             case Success<T>(T value) -> value;
-            case Failure<?>(Exception exception) -> throw toRuntimeException(exception);
+            case Failure<?>(Throwable throwable) -> throw toRuntimeException(throwable);
         };
     }
 
@@ -152,13 +145,13 @@ public sealed interface Result<T> permits Success, Failure {
     }
 
     /**
-     * <p>Throws exception if failure. If exception is not {@link RuntimeException} then
-     * {@code RuntimeException(exception)} is thrown.</p>
+     * <p>Throws throwable if failure. If throwable is not {@link RuntimeException} then
+     * {@code RuntimeException(throwable)} is thrown.</p>
      *
      * <p>This method should be used instead of {@link #getOrThrow} if result value is {@link Void} or is not
      * relevant. It can be also used as chained method for {@link #onSuccess}} or {@link #onFailure}.</p>
      *
-     * <p><strong>Examples:</strong>
+     * <p><strong>Examples:</strong></p>
      * <pre>{@code
      * getResult()
      *      .onSuccess(value -> {
@@ -170,17 +163,16 @@ public sealed interface Result<T> permits Success, Failure {
      *      .onSuccess(value -> {
      *          // ...
      *      })
-     *      .onFailure(exception -> {
-     *          // log exception
-     *          // can't throw arbitrary exception from lambda
+     *      .onFailure(throwable -> {
+     *          // log throwable
+     *          // can't throw arbitrary throwable from lambda
      *      }
      *      .throwIfFailure();
      * }</pre>
-     * </p>
      */
     default void throwIfFailure() {
-        if (this instanceof Failure<?>(Exception exception)) {
-            throw toRuntimeException(exception);
+        if (this instanceof Failure<?>(Throwable throwable)) {
+            throw toRuntimeException(throwable);
         }
     }
 
@@ -200,14 +192,14 @@ public sealed interface Result<T> permits Success, Failure {
     }
 
     /**
-     * Calls consumer with exception in case of failure.
+     * Calls consumer with throwable in case of failure.
      *
-     * @param consumer exception consumer
+     * @param consumer throwable consumer
      * @return this instance
      */
-    default Result<T> onFailure(Consumer<Exception> consumer) {
-        if (this instanceof Failure<?>(Exception exception)) {
-            consumer.accept(exception);
+    default Result<T> onFailure(Consumer<Throwable> consumer) {
+        if (this instanceof Failure<?>(Throwable throwable)) {
+            consumer.accept(throwable);
         }
         return this;
     }
@@ -236,17 +228,18 @@ public sealed interface Result<T> permits Success, Failure {
     /**
      * Creates a failed result.
      *
-     * @param exception cause of failure
+     * @param throwable cause of failure
+     * @param <T>       value type
      * @return result
-     * @throws NullPointerException if exception is null
+     * @throws NullPointerException if throwable is null
      */
-    static <T> Result<T> failure(Exception exception) {
-        return new Failure<>(Objects.requireNonNull(exception, "Failure exception must not be null"));
+    static <T> Result<T> failure(Throwable throwable) {
+        return new Failure<>(Objects.requireNonNull(throwable, "Failure throwable must not be null"));
     }
 
-    private static RuntimeException toRuntimeException(Exception exception) {
-        return exception instanceof RuntimeException runtimeException ?
-                runtimeException : new RuntimeException(exception);
+    private static RuntimeException toRuntimeException(Throwable throwable) {
+        return throwable instanceof RuntimeException runtimeException ?
+                runtimeException : new RuntimeException(throwable);
     }
 }
 

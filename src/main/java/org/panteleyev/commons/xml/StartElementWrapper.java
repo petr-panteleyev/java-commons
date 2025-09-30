@@ -1,5 +1,5 @@
 /*
- Copyright © 2024 Petr Panteleyev <petr@panteleyev.org>
+ Copyright © 2024-2025 Petr Panteleyev
  SPDX-License-Identifier: BSD-2-Clause
  */
 package org.panteleyev.commons.xml;
@@ -64,6 +64,7 @@ public class StartElementWrapper {
      *
      * @param name         attribute name
      * @param defaultValue attribute default value
+     * @param <T>          value type
      * @return attribute value or default value if attribute does not exist
      */
     @SuppressWarnings("unchecked")

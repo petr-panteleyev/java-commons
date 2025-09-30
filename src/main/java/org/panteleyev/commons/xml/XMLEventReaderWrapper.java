@@ -1,5 +1,5 @@
 /*
- Copyright © 2024 Petr Panteleyev <petr@panteleyev.org>
+ Copyright © 2024-2025 Petr Panteleyev
  SPDX-License-Identifier: BSD-2-Clause
  */
 package org.panteleyev.commons.xml;
@@ -35,6 +35,7 @@ public class XMLEventReaderWrapper implements AutoCloseable {
      * Creates new instance of {@link XMLStreamWriterWrapper}.
      *
      * @param inputStream input stream
+     * @param options     serialization options
      * @return wrapper instance
      */
     public static XMLEventReaderWrapper newInstance(InputStream inputStream, Set<SerializationOption> options) {
