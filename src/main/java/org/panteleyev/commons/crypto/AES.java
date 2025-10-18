@@ -6,10 +6,11 @@ package org.panteleyev.commons.crypto;
 
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 import java.util.function.Function;
 
 /**
@@ -22,6 +23,7 @@ public interface AES {
      * @param str      string
      * @param password password
      * @return encrypted bytes
+     * @throws CryptographyException if cryptography related error occurs
      */
     default byte[] encrypt(String str, String password) {
         return encrypt(str.getBytes(StandardCharsets.UTF_8), password);
@@ -33,6 +35,7 @@ public interface AES {
      * @param src      byte array
      * @param password password
      * @return encrypted bytes
+     * @throws CryptographyException if cryptography related error occurs
      */
     byte[] encrypt(byte[] src, String password);
 
@@ -42,9 +45,10 @@ public interface AES {
      * @param src      bytes to encrypt
      * @param password password
      * @param out      stream
-     * @throws IOException if an I/O error occurs.
+     * @throws CryptographyException if cryptography related error occurs
+     * @throws UncheckedIOException  if an I/O error occurs
      */
-    void encrypt(byte[] src, String password, OutputStream out) throws IOException;
+    void encrypt(byte[] src, String password, OutputStream out);
 
     /**
      * Encrypt string and write the result into the stream.
@@ -52,9 +56,10 @@ public interface AES {
      * @param str      string to encrypt
      * @param password password
      * @param out      stream
-     * @throws IOException in case of error
+     * @throws CryptographyException if cryptography related error occurs
+     * @throws UncheckedIOException  if an I/O error occurs.
      */
-    default void encrypt(String str, String password, OutputStream out) throws IOException {
+    default void encrypt(String str, String password, OutputStream out) {
         encrypt(str.getBytes(StandardCharsets.UTF_8), password, out);
     }
 
@@ -64,6 +69,7 @@ public interface AES {
      * @param bytes    bytes to decrypt
      * @param password password to decrypt
      * @return decrypted bytes
+     * @throws CryptographyException if cryptography related error occurs
      */
     byte[] decrypt(byte[] bytes, String password);
 
@@ -73,6 +79,7 @@ public interface AES {
      * @param bytes    bytes to decrypt
      * @param password password to decrypt
      * @return decrypted bytes
+     * @throws CryptographyException if cryptography related error occurs
      */
     String decryptString(byte[] bytes, String password);
 
@@ -82,9 +89,10 @@ public interface AES {
      * @param in       stream to decrypt
      * @param password password to decrypt
      * @return decrypted bytes
-     * @throws IOException in case of error
+     * @throws CryptographyException if cryptography related error occurs
+     * @throws UncheckedIOException  if an I/O error occurs.
      */
-    byte[] decrypt(InputStream in, String password) throws IOException;
+    byte[] decrypt(InputStream in, String password);
 
     /**
      * Returns input stream to decrypt encrypted stream with password.
@@ -92,9 +100,10 @@ public interface AES {
      * @param in       encrypted stream
      * @param password password
      * @return instance of {@link CipherInputStream}
-     * @throws IOException if an I/O error occurs.
+     * @throws CryptographyException if cryptography related error occurs
+     * @throws UncheckedIOException  if an I/O error occurs
      */
-    InputStream getInputStream(InputStream in, String password) throws IOException;
+    InputStream getInputStream(InputStream in, String password);
 
     /**
      * Returns output stream to encrypt given output stream.
@@ -102,9 +111,10 @@ public interface AES {
      * @param out      output stream
      * @param password password
      * @return instance of {@link CipherOutputStream}
-     * @throws IOException if an I/O error occurs.
+     * @throws CryptographyException if cryptography related error occurs
+     * @throws UncheckedIOException  if an I/O error occurs.
      */
-    OutputStream getOutputStream(OutputStream out, String password) throws IOException;
+    OutputStream getOutputStream(OutputStream out, String password);
 
     /**
      * Default 256-bit key generator. This implementation uses SHA-256 message
@@ -112,16 +122,22 @@ public interface AES {
      *
      * @param password password string
      * @return key bytes
+     * @throws CryptographyException if cryptography related error occurs
      */
     static byte[] generate256key(String password) {
-        return AESImpl.generateKey(password, "SHA-256");
+        try {
+            return AESImpl.generateKey(password, "SHA-256");
+        } catch (NoSuchAlgorithmException ex) {
+            throw new CryptographyException(ex);
+        }
     }
 
     /**
      * Return AES instance with specified key generation function.
      *
      * @param keyGen key generation function
-     * @return in case of error
+     * @return AES instance
+     * @throws NullPointerException if keyGen function is null
      */
     static AES aes(Function<String, byte[]> keyGen) {
         return AESImpl.getInstance(keyGen);
@@ -133,6 +149,7 @@ public interface AES {
      * for the appropriate JRE must be installed to use 256-bit keys.
      *
      * @return AES instance
+     * @throws CryptographyException if cryptography related error occurs
      */
     static AES aes256() {
         return aes(AES::generate256key);

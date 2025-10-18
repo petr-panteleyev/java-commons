@@ -1,5 +1,5 @@
 /*
- Copyright © 2020-2024 Petr Panteleyev <petr@panteleyev.org>
+ Copyright © 2020-2025 Petr Panteleyev
  SPDX-License-Identifier: BSD-2-Clause
  */
 package org.panteleyev.commons.crypto;
@@ -16,6 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -27,12 +28,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 class AESImpl implements AES {
-    private static final Logger LOGGER = Logger.getLogger(AESImpl.class.getName());
-
     private static final String ALGO = "AES";
     private static final String ALGO_FULL = ALGO + "/CBC/PKCS5Padding";
     private static final int IV_LENGTH = 16;
@@ -43,17 +40,13 @@ class AESImpl implements AES {
 
     private final Function<String, byte[]> keyGen;
 
-    static byte[] generateKey(String password, String algo) {
-        try {
-            var md = MessageDigest.getInstance(algo);
-            return md.digest(password.getBytes(StandardCharsets.UTF_8));
-        } catch (NoSuchAlgorithmException ex) {
-            return null;
-        }
+    static byte[] generateKey(String password, String algo) throws NoSuchAlgorithmException {
+        var md = MessageDigest.getInstance(algo);
+        return md.digest(password.getBytes(StandardCharsets.UTF_8));
     }
 
     static AES getInstance(Function<String, byte[]> keyGen) {
-        Objects.requireNonNull(keyGen);
+        Objects.requireNonNull(keyGen, "Key generation function cannot be null");
         return IMPLS.computeIfAbsent(keyGen, k -> new AESImpl(keyGen));
     }
 
@@ -81,15 +74,16 @@ class AESImpl implements AES {
             return res;
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException |
                  InvalidKeyException | InvalidAlgorithmParameterException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-            return null;
+            throw new CryptographyException(ex);
         }
     }
 
     @Override
-    public void encrypt(byte[] src, String password, OutputStream out) throws IOException {
+    public void encrypt(byte[] src, String password, OutputStream out) {
         try (var cOut = getOutputStream(out, password)) {
             cOut.write(src);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 
@@ -102,9 +96,9 @@ class AESImpl implements AES {
         try {
             var c = getCipher(Cipher.DECRYPT_MODE, password, Arrays.copyOf(bytes, IV_LENGTH));
             return c.doFinal(bytes, IV_LENGTH, bytes.length - IV_LENGTH);
-        } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-            return null;
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
+                 InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException ex) {
+            throw new CryptographyException(ex);
         }
     }
 
@@ -115,7 +109,7 @@ class AESImpl implements AES {
     }
 
     @Override
-    public byte[] decrypt(InputStream in, String password) throws IOException {
+    public byte[] decrypt(InputStream in, String password) {
         if (in instanceof CipherInputStream) {
             throw new IllegalArgumentException("CipherInputStream must be used directly");
         }
@@ -132,11 +126,13 @@ class AESImpl implements AES {
             }
 
             return out.toByteArray();
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 
     @Override
-    public InputStream getInputStream(InputStream in, String password) throws IOException {
+    public InputStream getInputStream(InputStream in, String password) {
         try {
             var iv = new byte[IV_LENGTH];
             for (int i = 0; i < IV_LENGTH; i++) {
@@ -150,13 +146,14 @@ class AESImpl implements AES {
             return new CipherInputStream(in, getCipher(Cipher.DECRYPT_MODE, password, iv));
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
                  InvalidAlgorithmParameterException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-            throw new IOException(ex);
+            throw new CryptographyException(ex);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 
     @Override
-    public OutputStream getOutputStream(OutputStream out, String password) throws IOException {
+    public OutputStream getOutputStream(OutputStream out, String password) {
         try {
             var iv = generateIV();
             var cipher = getCipher(Cipher.ENCRYPT_MODE, password, iv);
@@ -164,13 +161,15 @@ class AESImpl implements AES {
             return new CipherOutputStream(out, cipher);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
                  InvalidAlgorithmParameterException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-            throw new IOException(ex);
+            throw new CryptographyException(ex);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 
     private Cipher getCipher(int opMode, String password, byte[] iv) throws NoSuchAlgorithmException,
-            NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+            NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException
+    {
         var cipher = Cipher.getInstance(ALGO_FULL);
         var key = new SecretKeySpec(keyGen.apply(password), ALGO);
         cipher.init(opMode, key, new IvParameterSpec(iv));

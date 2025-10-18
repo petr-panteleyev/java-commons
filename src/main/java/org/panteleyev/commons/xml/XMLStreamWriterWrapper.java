@@ -41,6 +41,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      *
      * @param out output stream
      * @return instance of {@link XMLStreamWriterWrapper}
+     * @throws XMLWriterException if an error occurs
      */
     public static XMLStreamWriterWrapper newInstance(OutputStream out) {
         return newInstance(out, Set.of());
@@ -52,15 +53,18 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * @param out     output stream
      * @param options set of options
      * @return instance of {@link XMLStreamWriterWrapper}
+     * @throws XMLWriterException if an error occurs
      */
-    public static XMLStreamWriterWrapper newInstance(OutputStream out, Set<SerializationOption> options) {
+    public static XMLStreamWriterWrapper newInstance(OutputStream out,
+            Set<SerializationOption> options)
+    {
         try {
             return new XMLStreamWriterWrapper(
                     OUTPUT_FACTORY.createXMLStreamWriter(out),
                     options.contains(SerializationOption.LOCAL_DATE_AS_EPOCH_DAY)
             );
         } catch (XMLStreamException ex) {
-            throw new RuntimeException(ex);
+            throw new XMLWriterException(ex);
         }
     }
 
@@ -71,24 +75,28 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
 
     /**
      * Closes the writer. See {@link XMLStreamWriter#close()}.
+     *
+     * @throws XMLWriterException if an error occurs
      */
     @Override
     public void close() {
         try {
             writer.close();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+        } catch (XMLStreamException ex) {
+            throw new XMLWriterException(ex);
         }
     }
 
     /**
      * Flushes the writer. See {@link XMLStreamWriter#flush()}.
+     *
+     * @throws XMLWriterException if an error occurs
      */
     public void flush() {
         try {
             writer.flush();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+        } catch (XMLStreamException ex) {
+            throw new XMLWriterException(ex);
         }
     }
 
@@ -96,6 +104,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * Writes XML document.
      *
      * @param body block that generates document XML
+     * @throws XMLWriterException if an error occurs
      */
     public void document(Runnable body) {
         try {
@@ -103,7 +112,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
             body.run();
             writer.writeEndDocument();
         } catch (XMLStreamException ex) {
-            throw new RuntimeException(ex);
+            throw new XMLWriterException(ex);
         }
     }
 
@@ -112,6 +121,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      *
      * @param name root element name
      * @param body block that generates document XML
+     * @throws XMLWriterException if an error occurs
      */
     public void document(QName name, Runnable body) {
         try {
@@ -121,7 +131,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
             writer.writeEndElement();
             writer.writeEndDocument();
         } catch (XMLStreamException ex) {
-            throw new RuntimeException(ex);
+            throw new XMLWriterException(ex);
         }
     }
 
@@ -131,6 +141,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * @param name element name
      * @param body block that generates element XML: attributes, nodes, etc.
      * @return this instance
+     * @throws XMLWriterException if an error occurs
      */
     public XMLStreamWriterWrapper element(QName name, Runnable body) {
         try {
@@ -139,7 +150,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
             writer.writeEndElement();
             return this;
         } catch (XMLStreamException ex) {
-            throw new RuntimeException(ex);
+            throw new XMLWriterException(ex);
         }
     }
 
@@ -153,6 +164,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * @param name  element name
      * @param value value converted to element text
      * @return this instance
+     * @throws XMLWriterException if an error occurs
      */
     public XMLStreamWriterWrapper textElement(QName name, Object value) {
         try {
@@ -161,7 +173,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
             writer.writeEndElement();
             return this;
         } catch (XMLStreamException ex) {
-            throw new RuntimeException(ex);
+            throw new XMLWriterException(ex);
         }
     }
 
@@ -171,6 +183,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * @param name       element name
      * @param attributes attributes
      * @return this instance
+     * @throws XMLWriterException if an error occurs
      */
     public XMLStreamWriterWrapper element(QName name, Map<QName, ?> attributes) {
         return textElement(name, attributes, null);
@@ -183,6 +196,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * @param attributes attributes
      * @param value      value converted to element text
      * @return this instance
+     * @throws XMLWriterException if an error occurs
      */
     public XMLStreamWriterWrapper textElement(QName name, Map<QName, ?> attributes, Object value) {
         try {
@@ -194,7 +208,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
             writer.writeEndElement();
             return this;
         } catch (XMLStreamException ex) {
-            throw new RuntimeException(ex);
+            throw new XMLWriterException(ex);
         }
     }
 
@@ -204,6 +218,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      * @param name  attribute name
      * @param value attribute value
      * @return this instance
+     * @throws XMLWriterException if an error occurs
      */
     public XMLStreamWriterWrapper attribute(QName name, Object value) {
         try {
@@ -212,7 +227,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
             }
             return this;
         } catch (XMLStreamException ex) {
-            throw new RuntimeException(ex);
+            throw new XMLWriterException(ex);
         }
     }
 
@@ -221,6 +236,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      *
      * @param attributes attributes
      * @return this instance
+     * @throws XMLWriterException if an error occurs
      */
     public XMLStreamWriterWrapper attributes(Map<QName, ?> attributes) {
         try {
@@ -232,7 +248,7 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
             }
             return this;
         } catch (XMLStreamException ex) {
-            throw new RuntimeException(ex);
+            throw new XMLWriterException(ex);
         }
     }
 
@@ -241,13 +257,14 @@ public class XMLStreamWriterWrapper implements AutoCloseable {
      *
      * @param text element text
      * @return this instance
+     * @throws XMLWriterException if an error occurs
      */
     public XMLStreamWriterWrapper text(String text) {
         try {
             writer.writeCharacters(text);
             return this;
         } catch (XMLStreamException ex) {
-            throw new RuntimeException(ex);
+            throw new XMLWriterException(ex);
         }
     }
 }

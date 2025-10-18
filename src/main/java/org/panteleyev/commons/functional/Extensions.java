@@ -4,6 +4,7 @@
  */
 package org.panteleyev.commons.functional;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -20,8 +21,10 @@ public final class Extensions {
      * @param consumer consumer
      * @param <T>      value type
      * @return value
+     * @throws NullPointerException if consumer is null
      */
     public static <T> T apply(T value, Consumer<T> consumer) {
+        Objects.requireNonNull(consumer, "Consumer cannot be null");
         if (value != null) {
             consumer.accept(value);
         }

@@ -6,7 +6,10 @@ package org.panteleyev.commons.xml;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import java.io.InputStream;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 
@@ -26,6 +29,7 @@ public class XMLEventReaderWrapper implements AutoCloseable {
      *
      * @param inputStream input stream
      * @return wrapper instance
+     * @throws XMLReaderException if an error occurs
      */
     public static XMLEventReaderWrapper newInstance(InputStream inputStream) {
         return newInstance(inputStream, Set.of());
@@ -37,15 +41,18 @@ public class XMLEventReaderWrapper implements AutoCloseable {
      * @param inputStream input stream
      * @param options     serialization options
      * @return wrapper instance
+     * @throws XMLReaderException if an error occurs
      */
-    public static XMLEventReaderWrapper newInstance(InputStream inputStream, Set<SerializationOption> options) {
+    public static XMLEventReaderWrapper newInstance(InputStream inputStream,
+            Set<SerializationOption> options)
+    {
         try {
             return new XMLEventReaderWrapper(
                     INPUT_FACTORY.createXMLEventReader(inputStream),
                     options.contains(SerializationOption.LOCAL_DATE_AS_EPOCH_DAY)
             );
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+        } catch (XMLStreamException ex) {
+            throw new XMLReaderException(ex);
         }
     }
 
@@ -69,13 +76,15 @@ public class XMLEventReaderWrapper implements AutoCloseable {
 
     /**
      * Closes the wrapped reader. See {@link XMLEventReader#close()}.
+     *
+     * @throws XMLReaderException if an error occurs
      */
     @Override
     public void close() {
         try {
             reader.close();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new XMLReaderException(ex);
         }
     }
 
@@ -91,13 +100,15 @@ public class XMLEventReaderWrapper implements AutoCloseable {
     /**
      * Returns wrapped next event. See {@link XMLEventReader#nextEvent()}.
      *
-     * @return next event
+     * @return next event if available
+     * @throws XMLReaderException     if an error occurs
+     * @throws NoSuchElementException if next event is not available
      */
     public XMLEventWrapper nextEvent() {
         try {
             return new XMLEventWrapper(reader.nextEvent(), this);
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+        } catch (XMLStreamException ex) {
+            throw new XMLReaderException(ex);
         }
     }
 
@@ -105,18 +116,20 @@ public class XMLEventReaderWrapper implements AutoCloseable {
      * Check the next XMLEvent without reading it from the stream. See {@link XMLEventReader#peek()}.
      *
      * @return next event if available
+     * @throws XMLReaderException if an error occurs
      */
     public Optional<XMLEventWrapper> peek() {
         try {
             var event = reader.peek();
             return event == null ? Optional.empty() : Optional.of(new XMLEventWrapper(event, this));
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new XMLReaderException(ex);
         }
     }
 
     /**
      * Reads the content of a text-only element. See {@link XMLEventReader#getElementText()}.
+     * Does not throw {@link XMLStreamException} as in {@link XMLStreamReader#getElementText()}.
      *
      * @return element text
      */
